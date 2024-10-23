@@ -1,0 +1,7 @@
+
+* Installation
+#+begin_src elisp
+  (use-package stscript-mode
+    :straight (:host github :repo "conornash/stscript-mode"))
+
+#+end_src

@@ -33,9 +33,8 @@
    )
   "Highlighting expressions for STscript mode")
 
-(defun stscript-indent-line ()
-  "Indent current line as STscript code"
-  (interactive)
+(defun stscript-indent-line-internal ()
+  "Internal function to indent STscript code"
   (beginning-of-line)
   (if (bobp)
       (indent-line-to 0)
@@ -50,6 +49,10 @@
         (save-excursion
           (while not-indented
             (forward-line -1)
+            (if (looking-at "^[ \t]*/[[:alnum:]_-]+")
+                (progn
+                  (setq cur-indent (+ (current-indentation) 2))
+                  (setq not-indented nil)))
             (if (looking-at "^[ \t]*{:")
                 (progn
                   (setq cur-indent (+ (current-indentation) 2))
@@ -63,6 +66,22 @@
       (if cur-indent
           (indent-line-to cur-indent)
         (indent-line-to 0)))))
+
+(defun stscript-indent-line-or-region ()
+  "Indent current line or region as STscript code"
+  (interactive)
+  (save-excursion
+    (if (use-region-p)
+        (let ((start (region-beginning))
+              (end (region-end)))
+          (goto-char start)
+          (while (< (point) end)
+            (beginning-of-line)
+            (stscript-indent-line-internal)
+            (forward-line 1)))
+      (stscript-indent-line-internal))))
+
+
 
 (defvar stscript-mode-syntax-table
   (let ((st (make-syntax-table)))
@@ -79,7 +98,7 @@
   :syntax-table stscript-mode-syntax-table
 
   (set (make-local-variable 'font-lock-defaults) '(stscript-font-lock-keywords))
-  (set (make-local-variable 'indent-line-function) 'stscript-indent-line)
+  (set (make-local-variable 'indent-line-function) 'stscript-indent-line-or-region)
 
   (set (make-local-variable 'comment-start) "// ")
   (set (make-local-variable 'comment-end) "")
